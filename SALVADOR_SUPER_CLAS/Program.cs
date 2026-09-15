@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using SALVADOR_SUPER_CLAS.Data;
+
 namespace SALVADOR_SUPER_CLAS
 {
     public class Program
@@ -9,13 +12,21 @@ namespace SALVADOR_SUPER_CLAS
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            // ============================================================
+            // CONFIGURACIÓN LIMPIA DE ENTITY FRAMEWORK CON MYSQL (POMELO)
+            // ============================================================
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            // ============================================================
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
