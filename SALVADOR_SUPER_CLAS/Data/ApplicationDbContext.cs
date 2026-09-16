@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SALVADOR_SUPER_CLAS.Models;
-using System.Reflection.Emit;
+using System;
+using System.Collections.Generic;
 
 namespace SALVADOR_SUPER_CLAS.Data
 {
@@ -20,11 +21,55 @@ namespace SALVADOR_SUPER_CLAS.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Relación estricta de 1 a 1 para evitar sobreventa
+            // 1. Relación estricta de 1 a 1 para evitar sobreventa
             modelBuilder.Entity<Venta>()
                 .HasOne(v => v.Asiento)
                 .WithOne(a => a.Venta)
                 .HasForeignKey<Venta>(v => v.ID_Asiento);
+
+            // =======================================================
+            // NUEVO: RESTRICCIÓN DE INTEGRIDAD (Tarea de Diego)
+            // =======================================================
+            // Evitamos que al borrar un pasajero accidentalmente, se borren sus ventas (historial financiero).
+            modelBuilder.Entity<Venta>()
+                .HasOne(v => v.Pasajero)
+                .WithMany(p => p.Ventas)
+                .HasForeignKey(v => v.Documento_Pasajero)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // =======================================================
+            // 2. DATA SEEDING (Datos de prueba para la presentación)
+            // =======================================================
+
+            modelBuilder.Entity<Vehiculo>().HasData(
+                new Vehiculo { Placa = "CBA-2026", Capacidad = 40 }
+            );
+
+            modelBuilder.Entity<Salida>().HasData(
+                new Salida
+                {
+                    ID_Salida = 1,
+                    Placa_Vehiculo = "CBA-2026",
+                    Origen = "Cochabamba",
+                    Destino = "Santa Cruz",
+                    Fecha = new DateTime(2026, 9, 20),
+                    Hora = new TimeSpan(20, 0, 0),
+                    Tarifa = 150.00m
+                }
+            );
+
+            var asientos = new List<Asiento>();
+            for (int i = 1; i <= 40; i++)
+            {
+                asientos.Add(new Asiento
+                {
+                    ID_Asiento = i,
+                    ID_Salida = 1,
+                    Numero = i,
+                    Estado = "Libre"
+                });
+            }
+            modelBuilder.Entity<Asiento>().HasData(asientos);
         }
     }
 }

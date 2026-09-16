@@ -41,6 +41,8 @@ namespace SALVADOR_SUPER_CLAS
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
             app.Run();
         }
     }

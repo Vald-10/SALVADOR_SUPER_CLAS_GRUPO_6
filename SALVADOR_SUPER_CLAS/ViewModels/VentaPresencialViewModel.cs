@@ -1,12 +1,15 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace SALVADOR_SUPER_CLAS.Models
+namespace SALVADOR_SUPER_CLAS.ViewModels
 {
-    public class Pasajero
+    public class VentaPresencialViewModel
     {
-        [Key]
-        [Required(ErrorMessage = "El Documento es obligatorio.")]
+        [Required]
+        public int ID_Asiento { get; set; }
+
+        public int NumeroAsiento { get; set; }
+
+        [Required(ErrorMessage = "El Documento (CI/Pasaporte) es obligatorio.")]
         [MaxLength(30)]
         public string Documento { get; set; } = null!;
 
@@ -14,14 +17,12 @@ namespace SALVADOR_SUPER_CLAS.Models
         [MaxLength(150)]
         public string Nombre_Completo { get; set; } = null!;
 
-        [Required(ErrorMessage = "La Nacionalidad es obligatoria para el control migratorio.")]
+        [Required(ErrorMessage = "La Nacionalidad es requerida por migración.")]
         [MaxLength(50)]
         public string Nacionalidad { get; set; } = null!;
 
         [Required(ErrorMessage = "El Género es obligatorio.")]
         [MaxLength(20)]
         public string Genero { get; set; } = null!;
-
-        public ICollection<Venta> Ventas { get; set; } = new List<Venta>();
     }
 }

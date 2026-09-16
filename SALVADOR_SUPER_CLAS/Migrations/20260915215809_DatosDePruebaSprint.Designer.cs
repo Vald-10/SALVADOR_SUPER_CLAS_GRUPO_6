@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SALVADOR_SUPER_CLAS.Data;
 
@@ -11,9 +12,11 @@ using SALVADOR_SUPER_CLAS.Data;
 namespace SALVADOR_SUPER_CLAS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260915215809_DatosDePruebaSprint")]
+    partial class DatosDePruebaSprint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -497,7 +500,7 @@ namespace SALVADOR_SUPER_CLAS.Migrations
                     b.HasOne("SALVADOR_SUPER_CLAS.Models.Pasajero", "Pasajero")
                         .WithMany("Ventas")
                         .HasForeignKey("Documento_Pasajero")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SALVADOR_SUPER_CLAS.Models.Asiento", "Asiento")

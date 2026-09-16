@@ -1,0 +1,79 @@
+﻿@model SALVADOR_SUPER_CLAS.ViewModels.VentaPresencialViewModel
+
+@{
+    ViewData["Title"] = "Registro Migratorio y Venta";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header text-white" style="background-color: #548383;">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-badge"></i> Registro de Pasajero - Asiento #@Model.NumeroAsiento
+                    </h4>
+                </div>
+                <div class="card-body bg-light">
+
+                    <form asp-action="ProcesarVentaPresencial" method="post">
+
+                        <input type="hidden" asp-for="ID_Asiento" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Documento" class="form-label fw-bold">CI / Pasaporte <span class="text-danger">*</span></label>
+                                <input asp-for="Documento" class="form-control" placeholder="Ej. 1234567" autocomplete="off" />
+                                <span asp-validation-for="Documento" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Nombre_Completo" class="form-label fw-bold">Nombre Completo <span class="text-danger">*</span></label>
+                                <input asp-for="Nombre_Completo" class="form-control" placeholder="Ej. Juan Pérez" autocomplete="off" />
+                                <span asp-validation-for="Nombre_Completo" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="Nacionalidad" class="form-label fw-bold">Nacionalidad <span class="text-danger">*</span></label>
+                                <select asp-for="Nacionalidad" class="form-select">
+                                    <option value="">Seleccione una nacionalidad...</option>
+                                    <option value="Boliviana">Boliviana</option>
+                                    <option value="Argentina">Argentina</option>
+                                    <option value="Chilena">Chilena</option>
+                                    <option value="Brasileña">Brasileña</option>
+                                    <option value="Peruana">Peruana</option>
+                                    <option value="Otra">Otra</option>
+                                </select>
+                                <span asp-validation-for="Nacionalidad" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Genero" class="form-label fw-bold">Género <span class="text-danger">*</span></label>
+                                <select asp-for="Genero" class="form-select">
+                                    <option value="">Seleccione el género...</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                </select>
+                                <span asp-validation-for="Genero" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="@Url.Action("SeleccionarAsiento", "Venta", new { idSalida = 1 })" class="btn btn-secondary me-md-2">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success px-4" style="background-color: #548383; border-color: #548383;">
+                                <i class="bi bi-printer"></i> Cobrar e Imprimir Boleto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

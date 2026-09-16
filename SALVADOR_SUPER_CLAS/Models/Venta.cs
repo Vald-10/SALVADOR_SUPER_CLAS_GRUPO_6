@@ -9,20 +9,25 @@ namespace SALVADOR_SUPER_CLAS.Models
         [Key]
         public int ID_Venta { get; set; }
 
+        [Required]
         public int ID_Asiento { get; set; }
 
         [Required]
         [MaxLength(30)]
         public string Documento_Pasajero { get; set; } = null!;
 
+        [Required]
         public DateTime Fecha_Transaccion { get; set; }
 
+        [Required]
         [Column(TypeName = "decimal(10,2)")]
         public decimal Monto { get; set; }
 
+        [Required]
         [MaxLength(20)]
         public string Metodo_Pago { get; set; } = null!;
 
+        [Required]
         [MaxLength(255)]
         public string Token_Boletero { get; set; } = null!;
 
