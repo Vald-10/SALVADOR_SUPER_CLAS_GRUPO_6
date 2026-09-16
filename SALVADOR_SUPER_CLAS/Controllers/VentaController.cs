@@ -99,9 +99,6 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                 return Json(new { success = false, message = "Error interno del servidor.", detalle = ex.Message });
             }
         }
-        // =========================================================================
-        // GET: Mostrar la pantalla del formulario a la cajera
-        // =========================================================================
         [HttpGet]
         public async Task<IActionResult> FormularioVenta(int idAsiento)
         {
@@ -109,40 +106,33 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                 .Include(a => a.Venta)
                 .FirstOrDefaultAsync(a => a.ID_Asiento == idAsiento);
 
-            // Si el asiento no existe o ya fue vendido, lo rebotamos al croquis
             if (asiento == null || asiento.Venta != null)
             {
                 return RedirectToAction("SeleccionarAsiento", new { idSalida = 1 });
             }
 
-            // Preparamos los datos básicos para que Mariana los use en su vista
             var viewModel = new VentaPresencialViewModel
             {
                 ID_Asiento = asiento.ID_Asiento,
                 NumeroAsiento = asiento.Numero
             };
 
-            return View(viewModel); // Esto llamará al HTML que hará Mariana
+            return View(viewModel);
         }
 
-        // =========================================================================
-        // POST: Tu tarea principal -> Procesar la Venta y Registrar Migración
-        // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcesarVentaPresencial(VentaPresencialViewModel model)
         {
-            // 1. Filtro de Seguridad: ¿Faltan datos que Mariana debía validar?
             if (!ModelState.IsValid)
             {
-                return View("FormularioVenta", model); // Le devolvemos el formulario con errores
+                return View("FormularioVenta", model);
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // 2. Buscamos el asiento y validamos que siga libre
                 var asiento = await _context.Asientos
                     .Include(a => a.Salida)
                     .FirstOrDefaultAsync(a => a.ID_Asiento == model.ID_Asiento);
@@ -153,7 +143,6 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                     return View("FormularioVenta", model);
                 }
 
-                // 3. Lógica del Pasajero (Registrar o Actualizar)
                 var pasajero = await _context.Pasajeros.FindAsync(model.Documento);
                 if (pasajero == null)
                 {
@@ -175,7 +164,6 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                // 4. Lógica de la Venta
                 var nuevaVenta = new Venta
                 {
                     ID_Asiento = model.ID_Asiento,
@@ -183,44 +171,29 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                     Fecha_Transaccion = DateTime.Now,
                     Monto = asiento.Salida.Tarifa,
                     Metodo_Pago = "Efectivo",
-                    Token_Boletero = Guid.NewGuid().ToString() // Token único de impresión
+                    Token_Boletero = Guid.NewGuid().ToString()
                 };
                 _context.Ventas.Add(nuevaVenta);
 
-                // 5. TU TAREA CLAVE: Cambiar el estado en la base de datos
                 asiento.Estado = "Vendido";
                 _context.Asientos.Update(asiento);
 
-                // Guardamos la venta y el cambio de estado, y confirmamos
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // 6. Éxito: Le pasamos la venta a Erick para que él imprima el PDF
-                // (Este método "GenerarBoletoPdf" lo creará Erick en su tarea)
                 return RedirectToAction("GenerarBoletoPdf", new { idVenta = nuevaVenta.ID_Venta });
             }
             catch (DbUpdateException)
             {
-                // El escudo de Diego bloqueó la base de datos por concurrencia
                 await transaction.RollbackAsync();
                 ModelState.AddModelError("", "Error: El asiento fue vendido a otra persona en este instante.");
                 return View("FormularioVenta", model);
             }
         }
-        // No olvides agregar este using arriba: using Rotativa.AspNetCore;
 
-        // =========================================================================
-        // GET: Generar e imprimir el Boleto en PDF (Tarea de Erick)
-        // =========================================================================
-        [HttpGet]
-
-        // =========================================================================
-        // GET: Generar e imprimir el Boleto en PDF con QuestPDF (Tarea de Erick)
-        // =========================================================================
         [HttpGet]
         public async Task<IActionResult> GenerarBoletoPdf(int idVenta)
         {
-            // 1. La Consulta Maestra (Se mantiene igual)
             var venta = await _context.Ventas
                 .Include(v => v.Pasajero)
                 .Include(v => v.Asiento)
@@ -229,39 +202,34 @@ namespace SALVADOR_SUPER_CLAS.Controllers
 
             if (venta == null) return NotFound("No se encontró el boleto solicitado.");
 
-            // 2. Generación del PDF con QuestPDF usando C# puro
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A5); // Tamaño ticket/medio oficio
+                    page.Size(PageSizes.A5);
                     page.Margin(1, Unit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(11));
-                    // HEADER
                     page.Header().Column(col =>
                     {
                         col.Item().AlignCenter().Text("SALVADOR SUPER CLAS")
-                           .SemiBold().FontSize(20).FontColor("#548383"); // Color Teal
+                           .SemiBold().FontSize(20).FontColor("#548383");
                         col.Item().AlignCenter().Text("Boleto de Viaje Oficial").Underline();
                         col.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
                     });
 
-                    // BODY (Contenido del boleto)
                     page.Content().PaddingVertical(10).Column(col =>
                     {
                         col.Spacing(5);
 
-                        // Usamos una tabla para organizar los datos
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(100); // Columna de etiquetas
-                                columns.RelativeColumn();    // Columna de valores
+                                columns.ConstantColumn(100);
+                                columns.RelativeColumn();
                             });
 
-                            // Filas de datos
                             table.Cell().Text("Pasajero:").SemiBold();
                             table.Cell().Text(venta.Pasajero.Nombre_Completo);
 
@@ -287,12 +255,10 @@ namespace SALVADOR_SUPER_CLAS.Controllers
 
                         col.Spacing(15);
 
-                        // Bloque destacado del Asiento
                         col.Item().AlignCenter().Background("#548383").Padding(10).Text($"ASIENTO N° {venta.Asiento.Numero}")
                            .FontSize(18).SemiBold().FontColor(Colors.White);
                     });
 
-                    // FOOTER
                     page.Footer().AlignCenter().Column(col =>
                     {
                         col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
@@ -302,7 +268,6 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                 });
             });
 
-            // 3. Renderizamos el PDF en memoria y lo devolvemos como archivo
             byte[] pdfBytes = document.GeneratePdf();
             return File(pdfBytes, "application/pdf", $"Boleto_{venta.Documento_Pasajero}_Asiento{venta.ID_Asiento}.pdf");
         }

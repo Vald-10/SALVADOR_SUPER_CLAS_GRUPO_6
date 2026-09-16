@@ -21,25 +21,16 @@ namespace SALVADOR_SUPER_CLAS.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // 1. Relación estricta de 1 a 1 para evitar sobreventa
             modelBuilder.Entity<Venta>()
                 .HasOne(v => v.Asiento)
                 .WithOne(a => a.Venta)
                 .HasForeignKey<Venta>(v => v.ID_Asiento);
 
-            // =======================================================
-            // NUEVO: RESTRICCIÓN DE INTEGRIDAD (Tarea de Diego)
-            // =======================================================
-            // Evitamos que al borrar un pasajero accidentalmente, se borren sus ventas (historial financiero).
             modelBuilder.Entity<Venta>()
                 .HasOne(v => v.Pasajero)
                 .WithMany(p => p.Ventas)
                 .HasForeignKey(v => v.Documento_Pasajero)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // =======================================================
-            // 2. DATA SEEDING (Datos de prueba para la presentación)
-            // =======================================================
 
             modelBuilder.Entity<Vehiculo>().HasData(
                 new Vehiculo { Placa = "CBA-2026", Capacidad = 40 }

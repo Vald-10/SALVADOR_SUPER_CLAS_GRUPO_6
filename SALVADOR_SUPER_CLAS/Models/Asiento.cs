@@ -17,7 +17,6 @@ namespace SALVADOR_SUPER_CLAS.Models
         [ForeignKey("ID_Salida")]
         public Salida Salida { get; set; } = null!;
 
-        // El signo de interrogación indica que el asiento puede no tener venta (estar libre)
         public Venta? Venta { get; set; }
     }
 }
