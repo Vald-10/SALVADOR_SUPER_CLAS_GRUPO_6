@@ -1,0 +1,108 @@
+﻿@model SALVADOR_SUPER_CLAS.ViewModels.ArqueoViewModel
+
+@{
+    ViewData["Title"] = "Arqueo de Caja";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 text-secondary">
+            <i class="bi bi-cash-stack"></i> Arqueo Diario de Caja
+        </h2>
+        <span class="badge bg-light border text-dark fs-6 shadow-sm">
+            <i class="bi bi-person-badge"></i> Cajero: @Model.CajeroActual |
+            <i class="bi bi-clock"></i> Cierre: @Model.FechaCierre.ToString("dd/MM/yyyy HH:mm")
+        </span>
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-primary border-4 h-100">
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-2">Boletos Emitidos</h6>
+                    <h2 class="display-5 fw-bold text-primary mb-0">@Model.CantidadBoletos</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-success border-4 h-100">
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-2">Total Recaudado</h6>
+                    <h2 class="display-5 fw-bold text-success mb-0 valor-moneda">
+                        @Model.TotalVentas
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-warning border-4 h-100" style="background-color: #fffff8;">
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-2">Total en Caja (Físico)</h6>
+                    <h2 class="display-5 fw-bold text-warning mb-0 valor-moneda">
+                        @Model.TotalEsperadoEnCaja
+                    </h2>
+                    <small class="text-muted mt-2">Apertura: <span class="valor-moneda">@Model.MontoApertura</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-3 border-top pt-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+        <button type="button" id="btnCerrarTurno" class="btn btn-danger px-4 shadow">
+            <i class="bi bi-lock-fill"></i> Cerrar Turno e Imprimir
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const formateadorMoneda = new Intl.NumberFormat('es-BO', {
+                style: 'currency',
+                currency: 'BOB',
+                minimumFractionDigits: 2
+            });
+
+            document.querySelectorAll('.valor-moneda').forEach(elemento => {
+                const valorCrudo = parseFloat(elemento.innerText.replace(',', '.'));
+                if (!isNaN(valorCrudo)) {
+                    elemento.innerText = formateadorMoneda.format(valorCrudo);
+                }
+            });
+
+            const btnCerrar = document.getElementById('btnCerrarTurno');
+            if (btnCerrar) {
+                btnCerrar.addEventListener('click', function() {
+                    Swal.fire({
+                        title: '¿Está seguro de cerrar la caja?',
+                        text: "Esta acción consolidará las ventas del turno y no se puede deshacer.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="bi bi-lock-fill"></i> Sí, cerrar turno',
+                        cancelButtonText: 'Revisar montos'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: '¡Turno Cerrado!',
+                                text: 'El arqueo se ha registrado exitosamente. Generando ticket...',
+                                icon: 'success',
+                                confirmButtonColor: '#548383'
+                            });
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+}
