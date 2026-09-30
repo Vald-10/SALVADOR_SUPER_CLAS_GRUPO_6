@@ -1,0 +1,64 @@
+@model CierreCajaDto
+@{
+    ViewData["Title"] = "Cierre de Caja";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 no-imprimir">
+    <p class="text-muted mb-0">
+        @if (Model.EstaAbierta)
+        {
+            <span>Revisa el arqueo de tu turno. Al cerrar la caja ya no podrás vender más pasajes hoy.</span>
+        }
+        else
+        {
+            <span>Tu caja de hoy ya está cerrada. Este es el comprobante del arqueo final.</span>
+        }
+    </p>
+    <div class="d-flex gap-2">
+        @if (Model.EstaAbierta)
+        {
+            <a asp-controller="Venta" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Seguir vendiendo</a>
+            <form asp-action="Cerrar" method="post" id="formCerrar">
+                <input type="hidden" name="idCaja" value="@Model.ID_Caja" />
+                <button type="submit" class="btn btn-danger"><i class="bi bi-lock-fill"></i> Cerrar Caja</button>
+            </form>
+        }
+        else
+        {
+            <button type="button" class="btn btn-ssc-navy" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir arqueo</button>
+        }
+    </div>
+</div>
+
+<partial name="_ResumenCaja" model="Model" />
+
+@section Scripts {
+    <script src="~/lib/sweetalert2/sweetalert2.all.min.js"></script>
+    <script>
+        const form = document.getElementById('formCerrar');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (form.dataset.confirmado === 'si') return;
+                e.preventDefault();
+                const confirmar = (typeof Swal === 'undefined')
+                    ? Promise.resolve({ isConfirmed: confirm('¿Seguro que deseas cerrar la caja? No se puede deshacer.') })
+                    : Swal.fire({
+                        title: '¿Cerrar la caja del día?',
+                        html: 'Monto final del arqueo: <b>@ApiHelper.Bs(Model.Monto_Final)</b><br/>Después de cerrar ya no podrás vender más pasajes hoy.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#64748B',
+                        confirmButtonText: 'Sí, cerrar caja',
+                        cancelButtonText: 'Revisar montos'
+                    });
+                confirmar.then(r => {
+                    if (r.isConfirmed) {
+                        form.dataset.confirmado = 'si';
+                        form.submit();
+                    }
+                });
+            });
+        }
+    </script>
+}

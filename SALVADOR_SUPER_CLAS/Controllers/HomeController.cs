@@ -1,21 +1,53 @@
 using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SALVADOR_SUPER_CLAS.Models;
+using SALVADOR_SUPER_CLAS.ApiModels;
+using SALVADOR_SUPER_CLAS.Utils;
+using SALVADOR_SUPER_CLAS.ViewModels;
 
 namespace SALVADOR_SUPER_CLAS.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly HttpClient _httpClient;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IHttpClientFactory httpClientFactory)
         {
-            _logger = logger;
+            _httpClient = httpClientFactory.CreateClient("SalvadorApi");
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            if (User.IsInRole(Roles.GerenteOperaciones))
+            {
+                return RedirectToAction("Index", "Reportes");
+            }
+
+            if (User.IsInRole(Roles.Boletero))
+            {
+                int idUsuario = ApiHelper.ObtenerIdUsuario(User);
+                if (idUsuario == 0)
+                {
+                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return RedirectToAction("Login", "Cuenta");
+                }
+
+                var response = await _httpClient.GetAsync($"api/Cajas/actual/{idUsuario}");
+                CierreCajaDto? arqueo = null;
+                if (response.IsSuccessStatusCode)
+                {
+                    var caja = await response.Content.ReadFromJsonAsync<CajaDto>();
+                    arqueo = await _httpClient.GetFromJsonAsync<CierreCajaDto>($"api/Cajas/{caja!.ID_Caja}/arqueo");
+                }
+                return View("InicioBoletero", arqueo);
+            }
+
+            var salidas = await _httpClient.GetFromJsonAsync<List<SalidaResumenDto>>("api/Salidas") ?? new List<SalidaResumenDto>();
+            return View(salidas);
         }
 
         public IActionResult Privacy()
@@ -23,6 +55,7 @@ namespace SALVADOR_SUPER_CLAS.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

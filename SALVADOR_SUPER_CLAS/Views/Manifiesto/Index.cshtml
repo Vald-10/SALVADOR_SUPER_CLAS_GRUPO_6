@@ -1,0 +1,47 @@
+@model List<SalidaResumenDto>
+@{
+    ViewData["Title"] = "Manifiesto de Aduana";
+}
+
+<div class="ssc-card">
+    <div class="table-responsive">
+        <table class="table table-ssc table-hover">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Ruta</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Bus</th>
+                    <th class="text-center">Pasajeros</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No hay salidas registradas.</td></tr>
+                }
+                @foreach (var s in Model.OrderByDescending(s => s.Fecha).ThenByDescending(s => s.Hora))
+                {
+                    <tr>
+                        <td>@s.ID_Salida</td>
+                        <td class="fw-semibold">@s.Origen <i class="bi bi-arrow-right text-muted"></i> @s.Destino</td>
+                        <td>@s.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@s.Hora.ToString(@"hh\:mm")</td>
+                        <td>@s.Placa_Vehiculo</td>
+                        <td class="text-center">@s.Asientos_Vendidos / @s.Asientos_Totales</td>
+                        <td class="text-end text-nowrap">
+                            <a asp-action="RevisionManifiesto" asp-route-idSalida="@s.ID_Salida" class="btn btn-sm btn-outline-ssc">
+                                <i class="bi bi-eye"></i> Revisar
+                            </a>
+                            <a asp-action="GenerarManifiestoPdf" asp-route-idSalida="@s.ID_Salida" target="_blank" class="btn btn-sm btn-ssc">
+                                <i class="bi bi-file-earmark-pdf"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

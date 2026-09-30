@@ -1,0 +1,110 @@
+@model CierreCajaDto
+
+<div class="ssc-card mb-4">
+    <div class="ssc-card-header">
+        <span><i class="bi bi-safe2"></i> Caja N° @Model.ID_Caja · @Model.NombreCompleto <span class="text-muted fw-normal">(@Model.NombreUsuario)</span></span>
+        @if (Model.EstaAbierta)
+        {
+            <span class="badge-estado badge-abierta"><i class="bi bi-unlock"></i> Abierta</span>
+        }
+        else
+        {
+            <span class="badge-estado badge-cerrada"><i class="bi bi-lock"></i> Cerrada</span>
+        }
+    </div>
+    <div class="ssc-card-body">
+        <div class="row small text-muted mb-3">
+            <div class="col-md-6"><i class="bi bi-clock"></i> Apertura: <strong class="text-dark">@Model.Fecha_Apertura.ToString("dd/MM/yyyy HH:mm")</strong></div>
+            <div class="col-md-6"><i class="bi bi-clock-history"></i> Cierre: <strong class="text-dark">@(Model.Fecha_Cierre?.ToString("dd/MM/yyyy HH:mm") ?? "— (turno en curso)")</strong></div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="ssc-card kpi">
+                    <div class="etiqueta">Monto inicial</div>
+                    <div class="valor">@ApiHelper.Bs(Model.Monto_Inicial)</div>
+                    <div class="detalle">Efectivo de cambio</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="ssc-card kpi">
+                    <div class="etiqueta">Boletos vendidos</div>
+                    <div class="valor">@Model.Cantidad_Boletos</div>
+                    <div class="detalle">Pasajes de este turno</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="ssc-card kpi">
+                    <div class="etiqueta">Total de ventas</div>
+                    <div class="valor">@ApiHelper.Bs(Model.Total_Ventas)</div>
+                    <div class="detalle">Efectivo @ApiHelper.Bs(Model.Total_Efectivo) · QR @ApiHelper.Bs(Model.Total_QR)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="ssc-card kpi kpi-destacado">
+                    <div class="etiqueta">Monto final (arqueo)</div>
+                    <div class="valor">@ApiHelper.Bs(Model.Monto_Final)</div>
+                    <div class="detalle">Monto inicial + total de ventas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ssc-card">
+    <div class="ssc-card-header">
+        <span><i class="bi bi-receipt"></i> Ventas registradas en esta caja</span>
+        <span class="text-muted small fw-normal">@Model.Ventas.Count venta(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-ssc table-hover">
+            <thead>
+                <tr>
+                    <th>N° venta</th>
+                    <th>Hora</th>
+                    <th>Ruta</th>
+                    <th class="text-center">Asiento</th>
+                    <th>Pasajero</th>
+                    <th>Pago</th>
+                    <th class="text-end">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Ventas.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">Todavía no hay ventas en esta caja.</td></tr>
+                }
+                @foreach (var venta in Model.Ventas)
+                {
+                    <tr>
+                        <td>@venta.ID_Venta.ToString("D6")</td>
+                        <td>@venta.Fecha_Transaccion.ToString("HH:mm")</td>
+                        <td>@venta.Ruta</td>
+                        <td class="text-center fw-bold">@venta.Numero_Asiento</td>
+                        <td>@venta.Pasajero</td>
+                        <td>
+                            @if (venta.Metodo_Pago == "QR")
+                            {
+                                <span><i class="bi bi-qr-code"></i> QR</span>
+                            }
+                            else
+                            {
+                                <span><i class="bi bi-cash"></i> Efectivo</span>
+                            }
+                        </td>
+                        <td class="text-end">@ApiHelper.Bs(venta.Monto)</td>
+                    </tr>
+                }
+            </tbody>
+            @if (Model.Ventas.Any())
+            {
+                <tfoot>
+                    <tr class="fw-bold">
+                        <td colspan="6" class="text-end">Total</td>
+                        <td class="text-end">@ApiHelper.Bs(Model.Total_Ventas)</td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>

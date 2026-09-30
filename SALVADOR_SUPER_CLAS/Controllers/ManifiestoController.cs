@@ -1,95 +1,60 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SALVADOR_SUPER_CLAS.Data;
-using SALVADOR_SUPER_CLAS.ViewModels;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SALVADOR_SUPER_CLAS.ApiModels;
+using SALVADOR_SUPER_CLAS.Utils;
+using SALVADOR_SUPER_CLAS.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace SALVADOR_SUPER_CLAS.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     public class ManifiestoController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly HttpClient _httpClient;
 
-        public ManifiestoController(ApplicationDbContext context)
+        public ManifiestoController(IHttpClientFactory httpClientFactory)
         {
-            _context = context;
+            _httpClient = httpClientFactory.CreateClient("SalvadorApi");
         }
 
         [HttpGet]
-        public async Task<IActionResult> RevisionManifiesto(int idSalida = 1)
+        public async Task<IActionResult> Index()
         {
-            var salida = await _context.Salidas
-                .Include(s => s.Asientos)
-                    .ThenInclude(a => a.Venta)
-                        .ThenInclude(v => v.Pasajero)
-                .FirstOrDefaultAsync(s => s.ID_Salida == idSalida);
+            var salidas = await _httpClient.GetFromJsonAsync<List<SalidaResumenDto>>("api/Salidas");
+            return View(salidas ?? new List<SalidaResumenDto>());
+        }
 
-            if (salida == null)
+        [HttpGet]
+        public async Task<IActionResult> RevisionManifiesto(int idSalida)
+        {
+            var viewModel = await ObtenerManifiestoAsync(idSalida);
+            if (viewModel == null)
             {
-                return NotFound("El viaje solicitado no existe.");
+                TempData["Error"] = "El viaje solicitado no existe.";
+                return RedirectToAction("Index");
             }
-
-            var viewModel = new ManifiestoViewModel
-            {
-                ID_Salida = salida.ID_Salida,
-                Placa_Vehiculo = salida.Placa_Vehiculo,
-                Origen = salida.Origen,
-                Destino = salida.Destino,
-                Fecha = salida.Fecha,
-                Hora = salida.Hora,
-
-                Pasajeros = salida.Asientos
-                    .Where(a => a.Venta != null && a.Venta.Pasajero != null)
-                    .OrderBy(a => a.Numero)
-                    .Select(a => new PasajeroManifiesto
-                    {
-                        NumeroAsiento = a.Numero,
-                        Documento = a.Venta.Pasajero.Documento,
-                        Nombre_Completo = a.Venta.Pasajero.Nombre_Completo,
-                        Nacionalidad = a.Venta.Pasajero.Nacionalidad,
-                        Genero = a.Venta.Pasajero.Genero
-                    }).ToList()
-            };
 
             return View(viewModel);
         }
+
         [HttpGet]
-        public async Task<IActionResult> GenerarManifiestoPdf(int idSalida = 1) 
+        public async Task<IActionResult> GenerarManifiestoPdf(int idSalida)
         {
-            var salida = await _context.Salidas
-                .Include(s => s.Asientos)
-                    .ThenInclude(a => a.Venta)
-                        .ThenInclude(v => v.Pasajero)
-                .FirstOrDefaultAsync(s => s.ID_Salida == idSalida);
-
-            if (salida == null) return NotFound("El viaje solicitado no existe.");
-
-            var viewModel = new ManifiestoViewModel
+            var viewModel = await ObtenerManifiestoAsync(idSalida);
+            if (viewModel == null)
             {
-                ID_Salida = salida.ID_Salida,
-                Placa_Vehiculo = salida.Placa_Vehiculo,
-                Origen = salida.Origen,
-                Destino = salida.Destino,
-                Fecha = salida.Fecha,
-                Hora = salida.Hora,
-                Pasajeros = salida.Asientos
-                    .Where(a => a.Venta != null && a.Venta.Pasajero != null)
-                    .OrderBy(a => a.Numero)
-                    .Select(a => new PasajeroManifiesto
-                    {
-                        NumeroAsiento = a.Numero,
-                        Documento = a.Venta.Pasajero.Documento,
-                        Nombre_Completo = a.Venta.Pasajero.Nombre_Completo,
-                        Nacionalidad = a.Venta.Pasajero.Nacionalidad,
-                        Genero = a.Venta.Pasajero.Genero
-                    }).ToList()
-            };
+                TempData["Error"] = "El viaje solicitado no existe.";
+                return RedirectToAction("Index");
+            }
 
-            QuestPDF.Settings.License = LicenseType.Community;
+            string generadoPor = User.FindFirst("NombreCompleto")?.Value ?? User.Identity?.Name ?? "";
 
             var document = Document.Create(container =>
             {
@@ -100,53 +65,102 @@ namespace SALVADOR_SUPER_CLAS.Controllers
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(10));
 
-                    page.Header().Row(row =>
+                    page.Header().Column(header =>
                     {
-                        row.RelativeItem().Column(col =>
+                        header.Item().Row(row =>
                         {
-                            col.Item().Text("MANIFIESTO OFICIAL DE PASAJEROS").Bold().FontSize(16);
-                            col.Item().Text($"Ruta: {viewModel.Origen} - {viewModel.Destino}");
-                            col.Item().Text($"Fecha: {viewModel.Fecha:dd/MM/yyyy} | Hora: {viewModel.Hora:hh\\:mm}");
-                            col.Item().Text($"Bus Placa: {viewModel.Placa_Vehiculo}").Bold();
+                            row.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("SALVADOR SUPER CLASS").Bold().FontSize(18).FontColor("#1E293B");
+                                col.Item().Text("MANIFIESTO OFICIAL DE PASAJEROS - ADUANA").SemiBold().FontSize(12).FontColor("#548383");
+                            });
+                            row.ConstantItem(220).AlignRight().Column(col =>
+                            {
+                                col.Item().AlignRight().Text($"Salida N° {viewModel.ID_Salida}").SemiBold();
+                                col.Item().AlignRight().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(9);
+                                col.Item().AlignRight().Text($"Por: {generadoPor}").FontSize(9);
+                            });
+                        });
+
+                        header.Item().PaddingTop(8).Background("#F8FAFC").Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Row(row =>
+                        {
+                            row.RelativeItem().Text(t => { t.Span("Ruta: ").SemiBold(); t.Span($"{viewModel.Origen} - {viewModel.Destino}"); });
+                            row.RelativeItem().Text(t => { t.Span("Fecha: ").SemiBold(); t.Span($"{viewModel.Fecha:dd/MM/yyyy}"); });
+                            row.RelativeItem().Text(t => { t.Span("Hora: ").SemiBold(); t.Span(viewModel.Hora.ToString(@"hh\:mm")); });
+                            row.RelativeItem().Text(t => { t.Span("Bus (placa): ").SemiBold(); t.Span(viewModel.Placa_Vehiculo); });
+                            row.RelativeItem().Text(t => { t.Span("Pasajeros: ").SemiBold(); t.Span($"{viewModel.Pasajeros.Count} de {viewModel.Capacidad}"); });
                         });
                     });
 
-                    page.Content().PaddingVertical(1, Unit.Centimetre).Table(table =>
+                    page.Content().PaddingVertical(10).Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(70);
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
+                            columns.ConstantColumn(30);
+                            columns.ConstantColumn(55);
+                            columns.RelativeColumn(3);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1.3f);
                         });
 
                         table.Header(header =>
                         {
-                            header.Cell().Background(Colors.Grey.Lighten2).Padding(2).Text("Asiento").Bold();
-                            header.Cell().Background(Colors.Grey.Lighten2).Padding(2).Text("Nombre Completo").Bold();
-                            header.Cell().Background(Colors.Grey.Lighten2).Padding(2).Text("CI / Pasaporte").Bold();
-                            header.Cell().Background(Colors.Grey.Lighten2).Padding(2).Text("Nacionalidad").Bold();
-                            header.Cell().Background(Colors.Grey.Lighten2).Padding(2).Text("Género").Bold();
+                            foreach (var titulo in new[] { "N°", "Asiento", "Nombre Completo", "Tipo Doc.", "N° Documento", "Nacionalidad", "Género" })
+                            {
+                                header.Cell().Background("#1E293B").Padding(4).Text(titulo).Bold().FontColor(Colors.White);
+                            }
                         });
 
+                        int n = 1;
                         foreach (var pasajero in viewModel.Pasajeros)
                         {
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(pasajero.NumeroAsiento.ToString());
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(pasajero.Nombre_Completo);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(pasajero.Documento);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(pasajero.Nacionalidad);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(pasajero.Genero);
+                            string fondo = n % 2 == 0 ? "#F8FAFC" : "#FFFFFF";
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(n.ToString());
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(pasajero.NumeroAsiento.ToString()).SemiBold();
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(pasajero.Nombre_Completo);
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(pasajero.Tipo_Documento);
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(pasajero.Documento);
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(pasajero.Nacionalidad);
+                            table.Cell().Background(fondo).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(pasajero.Genero);
+                            n++;
+                        }
+
+                        if (viewModel.Pasajeros.Count == 0)
+                        {
+                            table.Cell().ColumnSpan(7).Padding(10).AlignCenter().Text("No hay pasajeros registrados para este viaje.").Italic();
                         }
                     });
 
-                    page.Footer().AlignCenter().Text(x =>
+                    page.Footer().Column(footer =>
                     {
-                        x.Span("Página ");
-                        x.CurrentPageNumber();
-                        x.Span(" de ");
-                        x.TotalPages();
+                        footer.Item().PaddingTop(25).Row(row =>
+                        {
+                            row.RelativeItem().AlignCenter().Column(c =>
+                            {
+                                c.Item().Width(180).LineHorizontal(1);
+                                c.Item().AlignCenter().Text("Firma Administrador").FontSize(9);
+                            });
+                            row.RelativeItem().AlignCenter().Column(c =>
+                            {
+                                c.Item().Width(180).LineHorizontal(1);
+                                c.Item().AlignCenter().Text("Firma Chofer / Tripulación").FontSize(9);
+                            });
+                            row.RelativeItem().AlignCenter().Column(c =>
+                            {
+                                c.Item().Width(180).LineHorizontal(1);
+                                c.Item().AlignCenter().Text("Sello Control Aduanero").FontSize(9);
+                            });
+                        });
+
+                        footer.Item().PaddingTop(6).AlignCenter().Text(x =>
+                        {
+                            x.Span("Página ").FontSize(8);
+                            x.CurrentPageNumber().FontSize(8);
+                            x.Span(" de ").FontSize(8);
+                            x.TotalPages().FontSize(8);
+                        });
                     });
                 });
             });
@@ -154,7 +168,19 @@ namespace SALVADOR_SUPER_CLAS.Controllers
             byte[] pdfBytes = document.GeneratePdf();
             string fileName = $"Manifiesto_{viewModel.Placa_Vehiculo}_{viewModel.Fecha:yyyyMMdd}.pdf";
 
-            return File(pdfBytes, "application/pdf", fileName);
+            Response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+            return File(pdfBytes, "application/pdf");
+        }
+
+        private async Task<ManifiestoViewModel?> ObtenerManifiestoAsync(int idSalida)
+        {
+            var response = await _httpClient.GetAsync($"api/Manifiesto/{idSalida}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<ManifiestoViewModel>();
         }
     }
 }

@@ -1,0 +1,24 @@
+@model int
+@{
+    var pasos = new[] { "Selección de Viaje", "Croquis de Asientos", "Datos y Pago" };
+}
+<div class="pasos">
+    @for (int i = 0; i < pasos.Length; i++)
+    {
+        int numero = i + 1;
+        string estado = numero < Model ? "hecho" : (numero == Model ? "actual" : "");
+        <div class="paso-item @estado">
+            <span class="numero">
+                @if (numero < Model)
+                {
+                    <i class="bi bi-check-lg"></i>
+                }
+                else
+                {
+                    @numero
+                }
+            </span>
+            <span>@pasos[i]</span>
+        </div>
+    }
+</div>

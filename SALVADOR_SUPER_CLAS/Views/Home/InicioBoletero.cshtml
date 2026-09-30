@@ -1,0 +1,87 @@
+@model CierreCajaDto?
+@{
+    ViewData["Title"] = "Inicio";
+    string nombre = User.FindFirst("NombreCompleto")?.Value ?? User.Identity?.Name ?? "";
+
+    bool abierta = Model != null && Model.EstaAbierta;
+    bool cerrada = Model != null && !Model.EstaAbierta;
+}
+
+<div class="mb-4">
+    <h2 style="font-size:1.35rem;" class="mb-1">Hola, @nombre</h2>
+    <p class="text-muted mb-0">Este es el flujo de tu turno en ventanilla.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="ssc-card kpi h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="etiqueta">Paso 1</div>
+                    <div class="valor" style="font-size:1.2rem;">Apertura de Caja</div>
+                </div>
+                <div class="icono"><i class="bi bi-unlock"></i></div>
+            </div>
+            @if (Model == null)
+            {
+                <div class="detalle mb-3">Registra el monto inicial para empezar a vender.</div>
+                <a asp-controller="Caja" asp-action="Apertura" class="btn btn-ssc w-100"><i class="bi bi-unlock"></i> Abrir Caja del Día</a>
+            }
+            else
+            {
+                <div class="detalle"><i class="bi bi-check-circle-fill text-success"></i> Abierta a las @Model.Fecha_Apertura.ToString("HH:mm") con @ApiHelper.Bs(Model.Monto_Inicial)</div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="ssc-card kpi h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="etiqueta">Paso 2</div>
+                    <div class="valor" style="font-size:1.2rem;">Venta de Pasajes</div>
+                </div>
+                <div class="icono"><i class="bi bi-ticket-perforated"></i></div>
+            </div>
+            @if (abierta)
+            {
+                <div class="detalle mb-3">@Model!.Cantidad_Boletos boleto(s) vendidos · @ApiHelper.Bs(Model.Total_Ventas)</div>
+                <a asp-controller="Venta" asp-action="Index" class="btn btn-ssc w-100"><i class="bi bi-ticket-perforated"></i> Vender pasajes</a>
+            }
+            else if (cerrada)
+            {
+                <div class="detalle">Vendiste @Model!.Cantidad_Boletos boleto(s) en este turno.</div>
+            }
+            else
+            {
+                <div class="detalle"><i class="bi bi-lock-fill"></i> Bloqueado hasta que abras la caja del día.</div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="ssc-card kpi h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="etiqueta">Paso 3</div>
+                    <div class="valor" style="font-size:1.2rem;">Cierre de Caja</div>
+                </div>
+                <div class="icono"><i class="bi bi-lock"></i></div>
+            </div>
+            @if (abierta)
+            {
+                <div class="detalle mb-3">Al terminar tu turno, haz el arqueo y cierra la caja.</div>
+                <a asp-controller="Caja" asp-action="Cierre" class="btn btn-outline-ssc w-100"><i class="bi bi-calculator"></i> Ir al cierre</a>
+            }
+            else if (cerrada)
+            {
+                <div class="detalle mb-3"><i class="bi bi-check-circle-fill text-success"></i> Cerrada a las @Model!.Fecha_Cierre?.ToString("HH:mm") · Monto final @ApiHelper.Bs(Model.Monto_Final)</div>
+                <a asp-controller="Caja" asp-action="Cierre" class="btn btn-outline-ssc w-100"><i class="bi bi-receipt"></i> Ver arqueo</a>
+            }
+            else
+            {
+                <div class="detalle">Disponible después de abrir la caja.</div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,44 +1,52 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SALVADOR_SUPER_CLAS.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SALVADOR_SUPER_CLAS.ApiModels;
+using SALVADOR_SUPER_CLAS.Utils;
 using SALVADOR_SUPER_CLAS.ViewModels;
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace SALVADOR_SUPER_CLAS.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     public class ArqueoController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly HttpClient _httpClient;
 
-        public ArqueoController(ApplicationDbContext context)
+        public ArqueoController(IHttpClientFactory httpClientFactory)
         {
-            _context = context;
+            _httpClient = httpClientFactory.CreateClient("SalvadorApi");
         }
 
         [HttpGet]
-        public async Task<IActionResult> Resumen()
+        public async Task<IActionResult> Index(DateTime? fecha)
         {
-            string nombreCaja = "Caja Principal - Sucursal Cochabamba";
-            DateTime fechaHoy = DateTime.Today;
-
-            var ventasDelTurno = _context.Ventas
-                .Where(v => v.Fecha_Transaccion.Date == fechaHoy);
-
-            int boletosEmitidos = await ventasDelTurno.CountAsync();
-            decimal recaudacionTotal = await ventasDelTurno.SumAsync(v => (decimal?)v.Monto) ?? 0m;
+            string url = fecha.HasValue ? $"api/Arqueo/cajas?fecha={fecha.Value:yyyy-MM-dd}" : "api/Arqueo/cajas";
+            var cajas = await _httpClient.GetFromJsonAsync<List<CierreCajaDto>>(url);
 
             var viewModel = new ArqueoViewModel
             {
-                CajeroActual = nombreCaja,
-                FechaCierre = DateTime.Now,
-                MontoApertura = 0m,
-                CantidadBoletos = boletosEmitidos,
-                TotalVentas = recaudacionTotal
+                Fecha = fecha,
+                Cajas = cajas ?? new List<CierreCajaDto>()
             };
-
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Resumen(int id)
+        {
+            var response = await _httpClient.GetAsync($"api/Cajas/{id}/arqueo");
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = "La caja solicitada no existe.";
+                return RedirectToAction("Index");
+            }
+
+            var arqueo = await response.Content.ReadFromJsonAsync<CierreCajaDto>();
+            return View(arqueo);
         }
     }
 }

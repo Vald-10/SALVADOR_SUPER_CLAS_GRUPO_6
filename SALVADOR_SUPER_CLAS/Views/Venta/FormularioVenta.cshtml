@@ -1,78 +1,116 @@
-﻿@model SALVADOR_SUPER_CLAS.ViewModels.VentaPresencialViewModel
-
+@model VentaPresencialViewModel
 @{
-    ViewData["Title"] = "Registro Migratorio y Venta";
+    ViewData["Title"] = "Venta de Pasajes";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header text-white" style="background-color: #548383;">
-                    <h4 class="mb-0">
-                        <i class="bi bi-person-badge"></i> Registro de Pasajero - Asiento #@Model.NumeroAsiento
-                    </h4>
+<partial name="_PasosVenta" model="3" />
+
+<form asp-action="ProcesarVentaPresencial" method="post">
+    <input type="hidden" asp-for="ID_Asiento" />
+    <input type="hidden" asp-for="ID_Salida" />
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="ssc-card">
+                <div class="ssc-card-header">
+                    <span><i class="bi bi-person-badge"></i> Registro migratorio del pasajero</span>
+                    <span class="text-muted small fw-normal">Todos los campos son obligatorios para aduana</span>
                 </div>
-                <div class="card-body bg-light">
+                <div class="ssc-card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" role="alert"></div>
 
-                    <form asp-action="ProcesarVentaPresencial" method="post">
-
-                        <input type="hidden" asp-for="ID_Asiento" />
-
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="Documento" class="form-label fw-bold">CI / Pasaporte <span class="text-danger">*</span></label>
-                                <input asp-for="Documento" class="form-control" placeholder="Ej. 1234567" autocomplete="off" />
-                                <span asp-validation-for="Documento" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="Nombre_Completo" class="form-label fw-bold">Nombre Completo <span class="text-danger">*</span></label>
-                                <input asp-for="Nombre_Completo" class="form-control" placeholder="Ej. Juan Pérez" autocomplete="off" />
-                                <span asp-validation-for="Nombre_Completo" class="text-danger small"></span>
-                            </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="Tipo_Documento" class="form-label fw-semibold">Tipo de documento <span class="text-danger">*</span></label>
+                            <select asp-for="Tipo_Documento" class="form-select">
+                                <option value="CI">CI (Bolivia)</option>
+                                <option value="RUT">RUT (Chile)</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                            </select>
+                            <span asp-validation-for="Tipo_Documento" class="text-danger small"></span>
                         </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label asp-for="Nacionalidad" class="form-label fw-bold">Nacionalidad <span class="text-danger">*</span></label>
-                                <select asp-for="Nacionalidad" class="form-select">
-                                    <option value="">Seleccione una nacionalidad...</option>
-                                    <option value="Boliviana">Boliviana</option>
-                                    <option value="Argentina">Argentina</option>
-                                    <option value="Chilena">Chilena</option>
-                                    <option value="Brasileña">Brasileña</option>
-                                    <option value="Peruana">Peruana</option>
-                                    <option value="Otra">Otra</option>
-                                </select>
-                                <span asp-validation-for="Nacionalidad" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="Genero" class="form-label fw-bold">Género <span class="text-danger">*</span></label>
-                                <select asp-for="Genero" class="form-select">
-                                    <option value="">Seleccione el género...</option>
-                                    <option value="Masculino">Masculino</option>
-                                    <option value="Femenino">Femenino</option>
-                                </select>
-                                <span asp-validation-for="Genero" class="text-danger small"></span>
-                            </div>
+                        <div class="col-md-8">
+                            <label asp-for="Documento" class="form-label fw-semibold">Número de documento <span class="text-danger">*</span></label>
+                            <input asp-for="Documento" class="form-control" placeholder="Ej. 1234567" autocomplete="off" autofocus />
+                            <span asp-validation-for="Documento" class="text-danger small"></span>
                         </div>
+                    </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="@Url.Action("SeleccionarAsiento", "Venta", new { idSalida = 1 })" class="btn btn-secondary me-md-2">
-                                Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-success px-4" style="background-color: #548383; border-color: #548383;">
-                                <i class="bi bi-printer"></i> Cobrar e Imprimir Boleto
-                            </button>
+                    <div class="mb-3">
+                        <label asp-for="Nombre_Completo" class="form-label fw-semibold">Nombre completo <span class="text-danger">*</span></label>
+                        <input asp-for="Nombre_Completo" class="form-control" placeholder="Ej. Juan Pérez Rojas" autocomplete="off" />
+                        <span asp-validation-for="Nombre_Completo" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Nacionalidad" class="form-label fw-semibold">Nacionalidad <span class="text-danger">*</span></label>
+                            <select asp-for="Nacionalidad" class="form-select">
+                                <option value="">Seleccione una nacionalidad...</option>
+                                <option value="Boliviana">Boliviana</option>
+                                <option value="Chilena">Chilena</option>
+                                <option value="Argentina">Argentina</option>
+                                <option value="Brasileña">Brasileña</option>
+                                <option value="Peruana">Peruana</option>
+                                <option value="Otra">Otra</option>
+                            </select>
+                            <span asp-validation-for="Nacionalidad" class="text-danger small"></span>
                         </div>
-                    </form>
+                        <div class="col-md-6">
+                            <label asp-for="Genero" class="form-label fw-semibold">Género <span class="text-danger">*</span></label>
+                            <select asp-for="Genero" class="form-select">
+                                <option value="">Seleccione el género...</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select>
+                            <span asp-validation-for="Genero" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <label class="form-label fw-semibold">Método de pago <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-3">
+                        <label class="ssc-card p-3 flex-fill d-flex align-items-center gap-2" style="cursor:pointer;">
+                            <input type="radio" asp-for="Metodo_Pago" value="Efectivo" class="form-check-input mt-0" />
+                            <i class="bi bi-cash-stack fs-4" style="color:#548383;"></i>
+                            <span><strong>Efectivo</strong><br /><span class="small text-muted">Entra a la caja física</span></span>
+                        </label>
+                        <label class="ssc-card p-3 flex-fill d-flex align-items-center gap-2" style="cursor:pointer;">
+                            <input type="radio" asp-for="Metodo_Pago" value="QR" class="form-check-input mt-0" />
+                            <i class="bi bi-qr-code fs-4" style="color:#548383;"></i>
+                            <span><strong>Código QR</strong><br /><span class="small text-muted">Transferencia bancaria</span></span>
+                        </label>
+                    </div>
+                    <span asp-validation-for="Metodo_Pago" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="ssc-card">
+                <div class="ssc-card-header"><span><i class="bi bi-ticket-perforated"></i> Resumen del pasaje</span></div>
+                <div class="ssc-card-body">
+                    <div class="viaje-ruta mb-2">@Model.Origen <i class="bi bi-arrow-right" style="color:#548383;"></i> @Model.Destino</div>
+                    <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Fecha</span><span>@Model.Fecha.ToString("dd/MM/yyyy")</span></div>
+                    <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Hora</span><span>@Model.Hora.ToString(@"hh\:mm")</span></div>
+                    <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Bus</span><span>@Model.Placa_Vehiculo</span></div>
+                    <div class="d-flex justify-content-between small mb-3"><span class="text-muted">Asiento</span><span class="fw-bold">N° @Model.NumeroAsiento</span></div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-semibold">Total a cobrar</span>
+                        <span class="fs-4 fw-bold" style="color:#1E293B;">@ApiHelper.Bs(Model.Tarifa)</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-ssc btn-lg w-100">
+                        <i class="bi bi-check2-circle"></i> Cobrar y emitir boleto
+                    </button>
+                    <a asp-action="SeleccionarAsiento" asp-route-idSalida="@Model.ID_Salida" class="btn btn-link w-100 mt-2">
+                        <i class="bi bi-arrow-left"></i> Volver al croquis
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

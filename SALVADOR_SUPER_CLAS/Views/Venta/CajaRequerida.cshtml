@@ -1,0 +1,30 @@
+@model CajaDto?
+@{
+    ViewData["Title"] = "Venta de Pasajes";
+}
+
+<div class="ssc-card text-center p-5 mx-auto" style="max-width:600px;">
+    <i class="bi bi-lock-fill" style="font-size:3rem;color:#94A3B8;"></i>
+
+    @if (Model == null)
+    {
+        <h2 class="mt-3" style="font-size:1.35rem;">Ventas bloqueadas</h2>
+        <p class="text-muted">
+            Para vender pasajes primero debes abrir tu caja del día registrando el monto inicial en efectivo.
+        </p>
+        <a asp-controller="Caja" asp-action="Apertura" class="btn btn-ssc btn-lg mt-2">
+            <i class="bi bi-unlock"></i> Abrir Caja del Día
+        </a>
+    }
+    else
+    {
+        <h2 class="mt-3" style="font-size:1.35rem;">Tu caja de hoy ya fue cerrada</h2>
+        <p class="text-muted">
+            Cerraste la caja a las @Model.Fecha_Cierre?.ToString("HH:mm"). Solo se permite una caja por día,
+            así que ya no puedes registrar más ventas hoy.
+        </p>
+        <a asp-controller="Caja" asp-action="Cierre" class="btn btn-outline-ssc btn-lg mt-2">
+            <i class="bi bi-receipt"></i> Ver el arqueo de hoy
+        </a>
+    }
+</div>

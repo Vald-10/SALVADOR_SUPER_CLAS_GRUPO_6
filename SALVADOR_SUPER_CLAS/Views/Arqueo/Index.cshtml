@@ -1,0 +1,103 @@
+@model ArqueoViewModel
+@{
+    ViewData["Title"] = "Control de Cajas";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <p class="text-muted mb-0">
+        Arqueo de las cajas de todos los boleteros
+        @(Model.Fecha.HasValue ? $"del {Model.Fecha.Value:dd/MM/yyyy}" : "de los últimos 30 días").
+    </p>
+    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-end">
+        <div>
+            <label class="form-label small mb-1" for="fecha">Filtrar por día</label>
+            <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" value="@Model.Fecha?.ToString("yyyy-MM-dd")" />
+        </div>
+        <button type="submit" class="btn btn-sm btn-ssc"><i class="bi bi-funnel"></i> Filtrar</button>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Ver todo</a>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="ssc-card kpi">
+            <div class="etiqueta">Cajas abiertas</div>
+            <div class="valor">@Model.CajasAbiertas</div>
+            <div class="detalle">Turnos en curso</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="ssc-card kpi">
+            <div class="etiqueta">Cajas cerradas</div>
+            <div class="valor">@Model.CajasCerradas</div>
+            <div class="detalle">Arqueos finalizados</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="ssc-card kpi">
+            <div class="etiqueta">Boletos vendidos</div>
+            <div class="valor">@Model.TotalBoletos</div>
+            <div class="detalle">En las cajas mostradas</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="ssc-card kpi kpi-destacado">
+            <div class="etiqueta">Total vendido</div>
+            <div class="valor">@ApiHelper.Bs(Model.TotalVentas)</div>
+            <div class="detalle">Efectivo @ApiHelper.Bs(Model.TotalEfectivo) · QR @ApiHelper.Bs(Model.TotalQR)</div>
+        </div>
+    </div>
+</div>
+
+<div class="ssc-card">
+    <div class="table-responsive">
+        <table class="table table-ssc table-hover">
+            <thead>
+                <tr>
+                    <th>Caja</th>
+                    <th>Boletero</th>
+                    <th>Apertura</th>
+                    <th>Cierre</th>
+                    <th class="text-end">Monto inicial</th>
+                    <th class="text-center">Boletos</th>
+                    <th class="text-end">Ventas</th>
+                    <th class="text-end">Monto final</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Cajas.Any())
+                {
+                    <tr><td colspan="10" class="text-center text-muted py-4">No hay cajas registradas en este periodo.</td></tr>
+                }
+                @foreach (var c in Model.Cajas)
+                {
+                    <tr>
+                        <td>N° @c.ID_Caja</td>
+                        <td>@c.NombreCompleto <span class="text-muted small">(@c.NombreUsuario)</span></td>
+                        <td>@c.Fecha_Apertura.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(c.Fecha_Cierre?.ToString("HH:mm") ?? "—")</td>
+                        <td class="text-end">@ApiHelper.Bs(c.Monto_Inicial)</td>
+                        <td class="text-center">@c.Cantidad_Boletos</td>
+                        <td class="text-end">@ApiHelper.Bs(c.Total_Ventas)</td>
+                        <td class="text-end fw-bold">@ApiHelper.Bs(c.Monto_Final)</td>
+                        <td>
+                            @if (c.EstaAbierta)
+                            {
+                                <span class="badge-estado badge-abierta"><i class="bi bi-unlock"></i> Abierta</span>
+                            }
+                            else
+                            {
+                                <span class="badge-estado badge-cerrada"><i class="bi bi-lock"></i> Cerrada</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Resumen" asp-route-id="@c.ID_Caja" class="btn btn-sm btn-outline-ssc"><i class="bi bi-eye"></i> Detalle</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

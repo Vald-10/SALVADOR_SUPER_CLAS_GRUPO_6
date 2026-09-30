@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SALVADOR_SUPER_CLAS.ViewModels
@@ -7,6 +7,7 @@ namespace SALVADOR_SUPER_CLAS.ViewModels
     {
         public int ID_Salida { get; set; }
         public string Placa_Vehiculo { get; set; } = null!;
+        public int Capacidad { get; set; }
         public string Origen { get; set; } = null!;
         public string Destino { get; set; } = null!;
         public DateTime Fecha { get; set; }
@@ -18,6 +19,7 @@ namespace SALVADOR_SUPER_CLAS.ViewModels
     public class PasajeroManifiesto
     {
         public int NumeroAsiento { get; set; }
+        public string Tipo_Documento { get; set; } = null!;
         public string Documento { get; set; } = null!;
         public string Nombre_Completo { get; set; } = null!;
         public string Nacionalidad { get; set; } = null!;

@@ -1,0 +1,53 @@
+@model AperturaCajaViewModel
+@{
+    ViewData["Title"] = "Apertura de Caja";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="ssc-card">
+            <div class="ssc-card-header">
+                <span><i class="bi bi-unlock"></i> Apertura de caja del día</span>
+                <span class="badge-estado badge-hoy">Paso 1 de 3</span>
+            </div>
+            <div class="ssc-card-body">
+                <p class="text-muted">
+                    Antes de vender pasajes debes abrir tu caja registrando el efectivo con el que
+                    empiezas el turno (monto para dar cambio). Solo se abre <strong>una caja por día</strong>.
+                </p>
+
+                <form asp-action="Apertura" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Fecha de apertura</label>
+                        <input class="form-control" value="@Model.Fecha_Apertura.ToString("dd/MM/yyyy HH:mm")" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Boletero</label>
+                        <input class="form-control" value="@(User.FindFirst("NombreCompleto")?.Value) (@User.Identity?.Name)" readonly />
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Monto_Inicial" class="form-label fw-semibold">Monto inicial en efectivo (Bs.)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Bs.</span>
+                            <input asp-for="Monto_Inicial" class="form-control form-control-lg" placeholder="Ej. 200.00" autocomplete="off" autofocus />
+                        </div>
+                        <div class="form-text">Use punto para los decimales. Puede ser 0 si empieza sin cambio.</div>
+                        <span asp-validation-for="Monto_Inicial" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-ssc btn-lg w-100">
+                        <i class="bi bi-unlock"></i> Abrir Caja del Día
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

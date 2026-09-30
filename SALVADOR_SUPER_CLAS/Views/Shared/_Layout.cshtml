@@ -1,46 +1,115 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@{
+    string controlador = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string accion = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    bool autenticado = User.Identity != null && User.Identity.IsAuthenticated;
+    string nombreCompleto = User.FindFirst("NombreCompleto")?.Value ?? User.Identity?.Name ?? "";
+    string rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    string inicial = string.IsNullOrEmpty(nombreCompleto) ? "?" : nombreCompleto.Substring(0, 1).ToUpper();
+
+    string Activo(string c, string? a = null) =>
+        controlador == c && (a == null || accion == a) ? "activo" : "";
+}
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SALVADOR_SUPER_CLAS</title>
+    <title>@ViewData["Title"] - Salvador Super Class</title>
+    <link rel="stylesheet" href="~/lib/fuentes/fuentes.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SALVADOR_SUPER_CLAS.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SALVADOR_SUPER_CLAS</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    @if (!autenticado)
+    {
+        <main class="auth-wrapper">
             @RenderBody()
         </main>
-    </div>
+    }
+    else
+    {
+        <div class="app-shell">
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <div class="marca"><i class="bi bi-bus-front-fill"></i> SALVADOR SUPER CLASS</div>
+                    <div class="sub">Transporte internacional Bolivia - Chile</div>
+                </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - SALVADOR_SUPER_CLAS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <div class="sidebar-usuario">
+                    <div class="avatar">@inicial</div>
+                    <div>
+                        <div class="nombre">@nombreCompleto</div>
+                        <div class="rol">@Roles.NombreVisible(rol)</div>
+                    </div>
+                </div>
+
+                <ul class="sidebar-nav">
+                    @if (User.IsInRole(Roles.Boletero))
+                    {
+                        <li><a class="@Activo("Home")" asp-controller="Home" asp-action="Index"><i class="bi bi-house-door"></i> Inicio</a></li>
+                        <li class="seccion">Mi turno</li>
+                        <li><a class="@Activo("Caja", "Apertura")" asp-controller="Caja" asp-action="Apertura"><span class="paso">1</span> Apertura de Caja</a></li>
+                        <li><a class="@Activo("Venta")" asp-controller="Venta" asp-action="Index"><span class="paso">2</span> Venta de Pasajes</a></li>
+                        <li><a class="@Activo("Caja", "Cierre")" asp-controller="Caja" asp-action="Cierre"><span class="paso">3</span> Cierre de Caja</a></li>
+                    }
+
+                    @if (User.IsInRole(Roles.Administrador))
+                    {
+                        <li><a class="@Activo("Home")" asp-controller="Home" asp-action="Index"><i class="bi bi-house-door"></i> Inicio</a></li>
+                        <li class="seccion">Operaciones</li>
+                        <li><a class="@Activo("Salidas")" asp-controller="Salidas" asp-action="Index"><i class="bi bi-signpost-split"></i> Programación de Salidas</a></li>
+                        <li><a class="@Activo("Manifiesto")" asp-controller="Manifiesto" asp-action="Index"><i class="bi bi-file-earmark-pdf"></i> Manifiesto de Aduana</a></li>
+                        <li class="seccion">Finanzas</li>
+                        <li><a class="@Activo("Arqueo")" asp-controller="Arqueo" asp-action="Index"><i class="bi bi-safe2"></i> Control de Cajas</a></li>
+                        <li><a class="@Activo("Reportes")" asp-controller="Reportes" asp-action="Index"><i class="bi bi-bar-chart-line"></i> Reportes</a></li>
+                    }
+
+                    @if (User.IsInRole(Roles.GerenteOperaciones))
+                    {
+                        <li class="seccion">Gerencia</li>
+                        <li><a class="@Activo("Reportes")" asp-controller="Reportes" asp-action="Index"><i class="bi bi-bar-chart-line"></i> Reportes y Estadísticas</a></li>
+                    }
+                </ul>
+
+                <div class="sidebar-footer">
+                    <form asp-controller="Cuenta" asp-action="Logout" method="post">
+                        <button type="submit"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
+                    </form>
+                </div>
+            </aside>
+
+            <div class="app-main">
+                <header class="topbar">
+                    <h1>@ViewData["Title"]</h1>
+                    <span class="fecha"><i class="bi bi-calendar3"></i> @DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy")</span>
+                </header>
+
+                <main class="app-content" role="main">
+                    @if (TempData["Exito"] != null)
+                    {
+                        <div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill"></i> @TempData["Exito"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]</div>
+                    }
+                    @if (TempData["Info"] != null)
+                    {
+                        <div class="alert alert-info d-flex align-items-center gap-2"><i class="bi bi-info-circle-fill"></i> @TempData["Info"]</div>
+                    }
+
+                    @RenderBody()
+                </main>
+
+                <footer class="app-footer">
+                    &copy; 2026 Salvador Super Class · Programación Web II · Grupo 6
+                </footer>
+            </div>
         </div>
-    </footer>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

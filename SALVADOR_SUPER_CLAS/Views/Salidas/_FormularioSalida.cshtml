@@ -1,0 +1,59 @@
+@model SalidaFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Origen" class="form-label fw-semibold">Origen</label>
+        <input asp-for="Origen" class="form-control" placeholder="Ej. Cochabamba" list="ciudades" />
+        <span asp-validation-for="Origen" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Destino" class="form-label fw-semibold">Destino</label>
+        <input asp-for="Destino" class="form-control" placeholder="Ej. Arica" list="ciudades" />
+        <span asp-validation-for="Destino" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Fecha" class="form-label fw-semibold">Fecha de salida</label>
+        <input asp-for="Fecha" class="form-control" />
+        <span asp-validation-for="Fecha" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Hora" class="form-label fw-semibold">Hora de salida</label>
+        <input asp-for="Hora" class="form-control" />
+        <span asp-validation-for="Hora" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Placa_Vehiculo" class="form-label fw-semibold">Bus asignado (placa)</label>
+        <select asp-for="Placa_Vehiculo" class="form-select">
+            <option value="">-- Selecciona un bus --</option>
+            @foreach (var bus in Model.BusesDisponibles)
+            {
+                <option value="@bus.Placa">@bus.Placa (@bus.Capacidad asientos)</option>
+            }
+        </select>
+        <span asp-validation-for="Placa_Vehiculo" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Tarifa" class="form-label fw-semibold">Precio del pasaje (Bs.)</label>
+        <div class="input-group">
+            <span class="input-group-text">Bs.</span>
+            <input asp-for="Tarifa" class="form-control" placeholder="Ej. 150.00" />
+        </div>
+        <div class="form-text">Use punto para los decimales (ej. 150.50).</div>
+        <span asp-validation-for="Tarifa" class="text-danger small"></span>
+    </div>
+</div>
+
+<datalist id="ciudades">
+    <option value="Cochabamba"></option>
+    <option value="La Paz"></option>
+    <option value="Santa Cruz"></option>
+    <option value="Oruro"></option>
+    <option value="Arica"></option>
+    <option value="Iquique"></option>
+    <option value="Calama"></option>
+    <option value="Santiago"></option>
+</datalist>

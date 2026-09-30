@@ -1,0 +1,33 @@
+@model VentaDetalleDto
+@{
+    ViewData["Title"] = "Venta de Pasajes";
+}
+
+<div class="ssc-card mx-auto" style="max-width:640px;">
+    <div class="ssc-card-body text-center p-4">
+        <div style="font-size:3rem;color:#1F7A4D;"><i class="bi bi-check-circle-fill"></i></div>
+        <h2 style="font-size:1.4rem;" class="mt-2">¡Venta registrada!</h2>
+        <p class="text-muted">El pasaje quedó registrado en tu caja N° @Model.ID_Caja.</p>
+
+        <div class="text-start bg-light rounded p-3 my-3">
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted">N° de venta</span><strong>@Model.ID_Venta.ToString("D6")</strong></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Pasajero</span><strong>@Model.Nombre_Completo</strong></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted">@Model.Tipo_Documento</span><span>@Model.Documento_Pasajero</span></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Viaje</span><span>@Model.Origen - @Model.Destino · @Model.Fecha.ToString("dd/MM/yyyy") @Model.Hora.ToString(@"hh\:mm")</span></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Asiento</span><strong>N° @Model.Numero_Asiento</strong></div>
+            <div class="d-flex justify-content-between"><span class="text-muted">Cobrado (@Model.Metodo_Pago)</span><strong>@ApiHelper.Bs(Model.Monto)</strong></div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a asp-action="GenerarBoletoPdf" asp-route-idVenta="@Model.ID_Venta" target="_blank" class="btn btn-ssc-navy">
+                <i class="bi bi-printer"></i> Imprimir boleto (PDF)
+            </a>
+            <a asp-action="SeleccionarAsiento" asp-route-idSalida="@Model.ID_Salida" class="btn btn-ssc">
+                <i class="bi bi-plus-circle"></i> Otro pasaje en este viaje
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-list"></i> Elegir otro viaje
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,8 +1,88 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model List<SalidaResumenDto>
+@{
+    ViewData["Title"] = "Inicio";
+    string nombre = User.FindFirst("NombreCompleto")?.Value ?? User.Identity?.Name ?? "";
+    var proximas = Model.Where(s => s.Fecha.Date >= DateTime.Today).OrderBy(s => s.Fecha).ThenBy(s => s.Hora).ToList();
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="mb-4">
+    <h2 style="font-size:1.35rem;" class="mb-1">Hola, @nombre</h2>
+    <p class="text-muted mb-0">Panel de administración y operaciones.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <a asp-controller="Salidas" asp-action="Crear" class="text-decoration-none">
+            <div class="ssc-card kpi viaje-card">
+                <div class="icono mb-2"><i class="bi bi-plus-circle"></i></div>
+                <div class="valor" style="font-size:1.05rem;">Programar salida</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-controller="Manifiesto" asp-action="Index" class="text-decoration-none">
+            <div class="ssc-card kpi viaje-card">
+                <div class="icono mb-2"><i class="bi bi-file-earmark-pdf"></i></div>
+                <div class="valor" style="font-size:1.05rem;">Manifiesto de aduana</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-controller="Arqueo" asp-action="Index" class="text-decoration-none">
+            <div class="ssc-card kpi viaje-card">
+                <div class="icono mb-2"><i class="bi bi-safe2"></i></div>
+                <div class="valor" style="font-size:1.05rem;">Control de cajas</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-controller="Reportes" asp-action="Index" class="text-decoration-none">
+            <div class="ssc-card kpi viaje-card">
+                <div class="icono mb-2"><i class="bi bi-bar-chart-line"></i></div>
+                <div class="valor" style="font-size:1.05rem;">Reportes</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="ssc-card">
+    <div class="ssc-card-header">
+        <span><i class="bi bi-calendar-week"></i> Próximas salidas</span>
+        <a asp-controller="Salidas" asp-action="Index" class="small">Ver todas</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-ssc table-hover">
+            <thead>
+                <tr>
+                    <th>Ruta</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Bus</th>
+                    <th style="width:28%;">Ocupación</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!proximas.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay salidas programadas desde hoy. <a asp-controller="Salidas" asp-action="Crear">Programa una</a>.</td></tr>
+                }
+                @foreach (var s in proximas.Take(6))
+                {
+                    int porcentaje = s.Asientos_Totales == 0 ? 0 : s.Asientos_Vendidos * 100 / s.Asientos_Totales;
+                    <tr>
+                        <td class="fw-semibold">@s.Origen <i class="bi bi-arrow-right text-muted"></i> @s.Destino</td>
+                        <td>@s.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@s.Hora.ToString(@"hh\:mm")</td>
+                        <td>@s.Placa_Vehiculo</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="barra-ocupacion flex-grow-1"><span style="width:@porcentaje%;"></span></div>
+                                <span class="small text-muted">@s.Asientos_Vendidos/@s.Asientos_Totales</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

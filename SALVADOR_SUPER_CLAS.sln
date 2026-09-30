@@ -1,9 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.37614.0 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SALVADOR_SUPER_CLAS", "SALVADOR_SUPER_CLAS\SALVADOR_SUPER_CLAS.csproj", "{62C6BFDE-5028-4023-A01C-C972812D386B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SALVADOR_API", "SALVADOR_API\SALVADOR_API.csproj", "{CDB76AF9-C7E5-4778-A1A4-A25F309BA367}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{62C6BFDE-5028-4023-A01C-C972812D386B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62C6BFDE-5028-4023-A01C-C972812D386B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62C6BFDE-5028-4023-A01C-C972812D386B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDB76AF9-C7E5-4778-A1A4-A25F309BA367}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDB76AF9-C7E5-4778-A1A4-A25F309BA367}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDB76AF9-C7E5-4778-A1A4-A25F309BA367}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDB76AF9-C7E5-4778-A1A4-A25F309BA367}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
